@@ -1,0 +1,26 @@
+﻿<UserControl x:Class="Graph_search.Components.GraphEdgeComponent"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vtb="clr-namespace:VectorTextBlock;assembly=VectorTextBlock"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800"
+             Panel.ZIndex="-1">
+    <Grid>
+        <vtb:VectorTextBlock Foreground="Gray"
+            Width="{Binding width}" Height="{Binding height}" Text="{Binding approxWeight}"
+            ContentAlignment="Center"
+            AutoScalePath="True"
+            Stroke="Black"
+            Fill="Black"
+            ShowPath="True"
+            Shift="12">
+            <vtb:VectorTextBlock.TextPath>
+                <LineGeometry
+                    StartPoint="{Binding from}"
+                    EndPoint="{Binding to}" />
+            </vtb:VectorTextBlock.TextPath>
+        </vtb:VectorTextBlock>
+    </Grid>
+</UserControl>

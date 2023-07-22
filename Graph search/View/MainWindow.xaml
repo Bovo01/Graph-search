@@ -14,8 +14,9 @@
         </Grid.ColumnDefinitions>
         <Grid Grid.Column="0">
             <Border BorderBrush="Black" BorderThickness="0,0,2,0" />
-            <TextBox HorizontalAlignment="Center" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="113" Margin="0,10,0,0" x:Name="NameTextBox" />
+            <TextBox KeyDown="AddNodeEnter" HorizontalAlignment="Center" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="113" Margin="0,10,0,0" x:Name="NameTextBox" />
             <Button Content="Add node" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,33,0,0" Click="AddNodeClick"/>
+            <Button Content="Add edge" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,86,0,0" Click="AddEdgeClick" />
         </Grid>
         <Canvas x:Name="RootCanvas" AllowDrop="True" DragOver="NodeDragOver" Background="Transparent" Grid.Column="1" />
     </Grid>
