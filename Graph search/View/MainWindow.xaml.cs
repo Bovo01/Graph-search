@@ -35,22 +35,37 @@ namespace Graph_search
         /// Adds a node with the given name to the canvas
         /// </summary>
         /// <param name="name">The node's name</param>
-        private void AddNode(string name)
+        private bool AddNode(string name)
         {
+            // Check that the name is unique
+            foreach (GraphNode n in nodes)
+                if (n.name == name)
+                {
+                    MessageBox.Show($"Name {name} was already taken");
+                    return false;
+                }
             GraphNode node = new GraphNode(name);
             nodes.Add(node);
             GraphNodeComponent nodeElem = new GraphNodeComponent(node, addEdgeState);
             Canvas.SetLeft(nodeElem, 0);
             Canvas.SetTop (nodeElem, 0);
             RootCanvas.Children.Add(nodeElem);
+            return true;
         }
         /// <summary>
         /// Links 2 nodes together with an edge
         /// </summary>
         /// <param name="from">Starting node</param>
         /// <param name="to">Ending node</param>
-        private void AddEdge(GraphNodeComponent from, GraphNodeComponent to)
+        private bool AddEdge(GraphNodeComponent from, GraphNodeComponent to)
         {
+            // Check if edge already exists
+            foreach (GraphEdgeComponent e in from.graphEdges)
+                if (e.edge.Opposite(from.node) == to.node)
+                {
+                    MessageBox.Show("This edge already exists");
+                    return false;
+                }
             // Create edge
             GraphEdgeComponent gec = new GraphEdgeComponent(from, to);
             from.AddEdge(gec); to.AddEdge(gec);
@@ -59,6 +74,7 @@ namespace Graph_search
             Canvas.SetLeft(gec, Math.Min(gec.from.X, gec.to.X));
             Canvas.SetTop (gec, Math.Min(gec.from.Y, gec.to.Y));
             RootCanvas.Children.Add(gec);
+            return true;
         }
         /// <summary>
         /// Animation for moving a node
@@ -130,11 +146,17 @@ namespace Graph_search
         private void AddEdgeClick(object sender, RoutedEventArgs e)
         {
             if (addEdgeState == AddEdgeState.None)
+            {
                 addEdgeState = AddEdgeState.FirstVertex;
+                AddEdgeButton.Content = "Cancel edge insertion";
+                ShowCurrentAction("Adding edge: select the first node");
+            }
             else
             {
                 addEdgeState = AddEdgeState.None;
                 firstVertex = null;
+                AddEdgeButton.Content = "Add edge";
+                HideCurrentAction();
             }
             SetAddEdgeStates();
         }
@@ -155,29 +177,42 @@ namespace Graph_search
         private void UserControl_AddEdgeEventHandler(object sender, RoutedEventArgs e)
         {
             if (addEdgeState == AddEdgeState.None) return;
-            object? sourceNode = e.OriginalSource as GraphNodeComponent;
-            if (sourceNode != null)
+            GraphNodeComponent? vertex = e.OriginalSource as GraphNodeComponent;
+            if (vertex != null)
             {
-                GraphNodeComponent vertex = (GraphNodeComponent)sourceNode;
                 switch (addEdgeState)
                 {
                     case AddEdgeState.FirstVertex:
                         firstVertex = vertex;
                         addEdgeState = AddEdgeState.SecondVertex;
+                        ShowCurrentAction($"Adding edge: selected \"{firstVertex.node.name}\", now select the second node");
                         break;
                     case AddEdgeState.SecondVertex:
                         if (firstVertex == vertex)
                             MessageBox.Show("You must select a different node");
-                        else
+                        else if (AddEdge(firstVertex, vertex)) // Adds the edge and checks if it was added
                         {
-                            AddEdge(firstVertex, vertex);
                             addEdgeState = AddEdgeState.None;
                             SetAddEdgeStates();
+                            HideCurrentAction();
+                            AddEdgeButton.Content = "Add edge";
                         }
                         break;
                 }
             }
             e.Handled = true;
+        }
+
+        private void ShowCurrentAction(string action)
+        {
+            CommunicationBox.Text = action;
+            CommunicationBox.Width = RootCanvas.ActualWidth;
+            Canvas.SetTop(CommunicationBox, 0);
+        }
+
+        private void HideCurrentAction()
+        {
+            Canvas.SetTop(CommunicationBox, -100);
         }
     }
 }

@@ -16,7 +16,7 @@ namespace Graph_search.Components
 
         internal GraphNode node { get; private set; }
         internal AddEdgeState addEdgeState;
-        private readonly List<GraphEdgeComponent> graphEdges;
+        internal readonly List<GraphEdgeComponent> graphEdges;
 
         /* xaml attributes */
         public string nodeName { get { return node.name; } }
