@@ -1,10 +1,10 @@
 ﻿using Graph_search.Components;
 using Graph_search.Model;
+using Graph_search.View.Components;
 using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 
 namespace Graph_search
 {
@@ -26,16 +26,22 @@ namespace Graph_search
         {
             InitializeComponent();
             nodes = new List<GraphNode>();
-            // Register the Bubble Event Handler
+            // Register the Edge toggle state Event Handler (triggered when the user clicks the button "Add edge")
+            AddHandler(LeftMenuComponent.ToggleEdgeStateEvent,
+                new RoutedEventHandler(UserControl_ToggleEdgeStateEventHandler));
+            // Register the Edge added Event Handler
             AddHandler(GraphNodeComponent.AddEdgeEvent,
                 new RoutedEventHandler(UserControl_AddEdgeEventHandler));
+            // Register the Node added Event Handler
+            AddHandler(LeftMenuComponent.AddNodeEvent,
+                new RoutedEventHandler(UserControl_AddNodeEventHandler));
         }
 
         /// <summary>
         /// Adds a node with the given name to the canvas
         /// </summary>
         /// <param name="name">The node's name</param>
-        private bool AddNode(string name)
+        internal bool AddNode(string name)
         {
             // Check that the name is unique
             foreach (GraphNode n in nodes)
@@ -74,6 +80,8 @@ namespace Graph_search
             Canvas.SetLeft(gec, Math.Min(gec.from.X, gec.to.X));
             Canvas.SetTop (gec, Math.Min(gec.from.Y, gec.to.Y));
             RootCanvas.Children.Add(gec);
+            // Send event to update button on the left
+            leftMenuComponent.RaiseEvent(new RoutedEventArgs(LeftMenuComponent.ToggledEdgeStateEvent, false));
             return true;
         }
         /// <summary>
@@ -116,51 +124,6 @@ namespace Graph_search
             return new Point(newX, newY);
         }
         /// <summary>
-        /// Function event that triggers when the user tries to add a new node to the graph
-        /// </summary>
-        private void AddNodeClick(object sender, RoutedEventArgs e)
-        {
-            if (NameTextBox.Text != "")
-            {
-                AddNode(NameTextBox.Text);
-                NameTextBox.Text = "";
-            }
-            else
-                MessageBox.Show("Insert the node name");
-            e.Handled = true;
-        }
-        /// <summary>
-        /// Function event that triggers when the user tries to add a new node to the graph (pressing the enter key while typing)
-        /// </summary>
-        private void AddNodeEnter(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Return)
-            {
-                AddNodeClick(NameTextBox.Text, e);
-                NameTextBox.Text = "";
-            }
-        }
-        /// <summary>
-        /// Prepares all the nodes to add a new edge. If waiting for the action, cancels it completely
-        /// </summary>
-        private void AddEdgeClick(object sender, RoutedEventArgs e)
-        {
-            if (addEdgeState == AddEdgeState.None)
-            {
-                addEdgeState = AddEdgeState.FirstVertex;
-                AddEdgeButton.Content = "Cancel edge insertion";
-                ShowCurrentAction("Adding edge: select the first node");
-            }
-            else
-            {
-                addEdgeState = AddEdgeState.None;
-                firstVertex = null;
-                AddEdgeButton.Content = "Add edge";
-                HideCurrentAction();
-            }
-            SetAddEdgeStates();
-        }
-        /// <summary>
         /// Sets the current addEdgeState to all the nodes in the canvas
         /// </summary>
         private void SetAddEdgeStates()
@@ -168,6 +131,22 @@ namespace Graph_search
             foreach (UIElement child in RootCanvas.Children)
                 if (child is GraphNodeComponent c)
                     c.addEdgeState = addEdgeState;
+        }
+        private void UserControl_ToggleEdgeStateEventHandler(object sender, RoutedEventArgs e)
+        {
+            bool addEdge = (bool)e.OriginalSource;
+            if (addEdge)
+            {
+                addEdgeState = AddEdgeState.FirstVertex;
+                ShowCurrentAction("Adding edge: select the first node");
+            }
+            else
+            {
+                addEdgeState = AddEdgeState.None;
+                firstVertex = null;
+                HideCurrentAction();
+            }
+            SetAddEdgeStates();
         }
         /// <summary>
         /// Event that get raised when a children is selected as vertex for an edge connection
@@ -190,17 +169,21 @@ namespace Graph_search
                     case AddEdgeState.SecondVertex:
                         if (firstVertex == vertex)
                             MessageBox.Show("You must select a different node");
-                        else if (AddEdge(firstVertex, vertex)) // Adds the edge and checks if it was added
+                        else if (AddEdge(firstVertex, vertex)) // Adds the edge, if possible
                         {
                             addEdgeState = AddEdgeState.None;
                             SetAddEdgeStates();
                             HideCurrentAction();
-                            AddEdgeButton.Content = "Add edge";
                         }
                         break;
                 }
             }
             e.Handled = true;
+        }
+        private void UserControl_AddNodeEventHandler(object sender, RoutedEventArgs e)
+        {
+            string name = (string)e.OriginalSource;
+            AddNode(name);
         }
 
         private void ShowCurrentAction(string action)
@@ -209,7 +192,6 @@ namespace Graph_search
             CommunicationBox.Width = RootCanvas.ActualWidth;
             Canvas.SetTop(CommunicationBox, 0);
         }
-
         private void HideCurrentAction()
         {
             Canvas.SetTop(CommunicationBox, -100);
